@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    paths-ignore:
+    - '**/*.md'
+    - '**/*.org'
+    branches:
+      - master
+  schedule:
+    - cron:  '0 */4 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs_version:
+          - 28.1
+        host:
+          - github
+          # - gitlab
+
+    steps:
+    - uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs_version }}
+
+    - uses: actions/checkout@v1
+
+    - name: sync packages
+      env:
+        ACCESS_LOGIN: ${{ secrets.ACCESS_LOGIN }}
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        GITLAB_USER: ${{ secrets.GITLAB_ACCESS_LOGIN }}
+        GITLAB_ACCESS_TOKEN: ${{ secrets.GITLAB_ACCESS_TOKEN }}
+      run: ./mirror-elpa .ci/${{ matrix.host }}.config
